@@ -5,8 +5,7 @@ from scipy.spatial import distance
 from imutils.video import VideoStream
 from imutils import face_utils
 from threading import Thread
-import argparse
-import imutils
+import imutils 
 import time
 import dlib
 import cv2

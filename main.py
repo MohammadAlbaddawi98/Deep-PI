@@ -1,27 +1,16 @@
 #Deep pi
 
-##import nessesary libraries
 from scipy.spatial import distance
 import imutils
 from imutils.video import VideoStream
 from imutils import face_utils
 from threading import Thread
-import argparse #for test
 import time
 import dlib
 import cv2
 from playsound import playsound
 import serial
 
-
-# calculate eye aspect ratio (EAR)
-def EAR_Calculater(point):
-    p14 = distance.euclidean(point[0], point[3])
-    p32 = distance.euclidean(point[1], point[5])
-    p65 = distance.euclidean(point[2], point[4])
-    Ear = (p65 + p32) / (p14 + p14)
-    return Ear
-    
 #Create alarm using thread
 def create_alarm():
     global alarm_status
@@ -41,8 +30,19 @@ def countdown():
 
          if(my_timer==0):
              msg =serial.Serial("dev/rfcomm1", baudrate=9600)
-             msg.write(str(10))
-             
+             msg.write(str(10))     #msg2arduino
+
+
+
+
+# calculate eye aspect ratio (EAR)
+def EAR_Calculater(point):
+    p14 = distance.euclidean(point[0], point[3])
+    p32 = distance.euclidean(point[1], point[5])
+    p65 = distance.euclidean(point[2], point[4])
+    Ear = (p65 + p32) / (p14 + p14)
+    return Ear
+
 #detect shape position
 def Shape_Position(shape):
     (Leye_first, Leye_last) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]   # left_eye  = (42, 48))
@@ -56,8 +56,6 @@ def Shape_Position(shape):
     Avg_ear = (leftEAR + rightEAR) / 2.0
     return (Avg_ear, leftEye, rightEye)
 
-
-
 #create parameters
 EAR_Threshold = 0.25
 NO_EAR_FRAMES = 22  #number of frame to make affect
@@ -66,25 +64,26 @@ count = 0
 my_timer=60*5
 
 
-#load models
-detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")  #for detect faces
-predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')  #for detect shap of eyes
+detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")    
+predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
-###############################################
-V_Stream= VideoStream(usePiCamera=True).start() 
+
+
+V_Stream= VideoStream(usePiCamera=True).start()       //For Raspberry Pi
 time.sleep(1.0)
 
 while True:
     frame = V_Stream.read()
     frame = imutils.resize(frame, width=777,height=777)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    rect = detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30),flags=cv2.CASCADE_SCALE_IMAGE)
 
-      for (x, y, w, h) in rect:
-        rect = dlib.rectangle(int(x), int(y), int(x + w),int(y + h))
+    rectangl = detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30),flags=cv2.CASCADE_SCALE_IMAGE)
+
+    for (x, y, w, h) in rectangl:
+        rectangl = dlib.rectangle(int(x), int(y), int(x + w),int(y + h))
         cv2.rectangle(frame,(x,y),(x+w,y+h),(110,255,0),5,1 )
 
-        shape = predictor(gray, rect)
+        shape = predictor(gray, rectangl)
         shape = face_utils.shape_to_np(shape)
         eye = Shape_Position(shape)
         Ear = eye[0]
@@ -94,7 +93,7 @@ while True:
 
         Leye = cv2.convexHull(leftEye)
         Reye = cv2.convexHull(rightEye)
-        cv2.drawContours(frame, [Leye,Reye], -1, (255, 255, 255), 2)
+        cv2.drawContours(frame, [Leye,Reye], -1, (0, 0, 255), 2)
         if Ear < EAR_Threshold:
             count += 1
             if count >= NO_EAR_FRAMES:
@@ -119,10 +118,8 @@ while True:
                     cv2.FONT_ITALIC, 0.7, (0, 0, 255), 2)
 
     cv2.imshow("Deep PI", frame)
-     
-     
-     
-    if (cv2.waitKey(1)& 0xFF== ord("q")): #change q to button read from driver
+    if (cv2.waitKey(1)& 0xFF== ord(" ")):  #change q to button read from driver
         break
+
 cv2.destroyAllWindows()
 V_Stream.stop()

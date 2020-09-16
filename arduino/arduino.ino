@@ -27,9 +27,9 @@ char keys[ROWS][COLS] = {
   {'7', '8', '9'},
   {'*', '0', '#'}
 };
-byte rowPins[ROWS] =  {A6,A5,A4,A3}; //connect to the row pinouts of the keypad
-byte colPins[COLS] = {A2,A1,A0}; //connect to the column pinouts of the keypad
-Keypad customKeypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS); //initialize an instance of class NewKeypad
+byte rowPins[ROWS] =  {A6,A5,A4,A3}; 
+byte colPins[COLS] = {A2,A1,A0}; 
+Keypad customKeypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 
 ////////////////////////////
@@ -96,8 +96,8 @@ void loop() {
               }
               
     }
-  /////////////////////
-  //check rasspberry msg    
+/////////////////////
+//check rasspberry msg    
   if (Serial.available() > 0 & CONNECT_FLAG == 1) {
     
         // read the incoming byte:
